@@ -1,0 +1,45 @@
+pmax = 400;
+vmax = 20;
+amax = 20;
+
+tc=vmax/amax;
+p1= amax*(tc)^2/2;
+p2=pmax - p1;
+tm=(p2-p1)/vmax;
+tf = 2*tc+tm;  
+
+q = zeros(1,100);
+v = zeros(1,100);
+a = zeros(1,100);
+time = zeros(1,100);
+
+for i = 1:1:tf*100+1
+    t = (i-1)*0.01;
+    if t <= tc
+        q(i) = amax/(2*tc)*t^2;
+        v(i) = vmax/tc*t;
+        a(i) = amax;
+    elseif (t > tc && t <= tc+tm)
+        q(i) = vmax*t + amax*tc/2 - vmax*tc;
+        v(i) = vmax;
+        a(i) = 0;
+    elseif  (t>tc+tm && t <= tc+2*tm)
+        q(i) = -amax/(2*tc)*t^2 + (vmax+amax/tc*(tm+tc))*t+pmax + amax/(2*tc)*tf^2 -(vmax+amax/tc*(tm+tc))*tf;
+        v(i) = vmax/tc*(tf-t);
+        a(i) = -amax;
+    end
+    time(i) = t;
+end
+
+subplot(3,1,1);
+plot(time,q,'r','LineWidth',2);
+title('position');
+grid on;
+subplot(3,1,2);
+plot(time,v,'g','LineWidth',2);
+title('velocity');
+grid on;
+subplot(3,1,3);
+plot(time,a,'b','LineWidth',2);
+title('acceleration');
+grid on;

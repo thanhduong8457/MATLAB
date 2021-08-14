@@ -1,0 +1,75 @@
+[System]
+Name='bai3'
+Type='mamdani'
+Version=2.0
+NumInputs=3
+NumOutputs=1
+NumRules=27
+AndMethod='min'
+OrMethod='max'
+ImpMethod='min'
+AggMethod='max'
+DefuzzMethod='centroid'
+
+[Input1]
+Name='input1'
+Range=[0 100]
+NumMFs=3
+MF1='Small':'trimf',[-40 0 50]
+MF2='MEDIUM':'trimf',[0 50 100]
+MF3='LARGE':'trimf',[50 100 140]
+
+[Input2]
+Name='input2'
+Range=[0 100]
+NumMFs=3
+MF1='Greasy1':'trimf',[0 0 50]
+MF2='medium':'trimf',[0 50 100]
+MF3='Greasy2':'trimf',[50 100 140]
+
+[Input3]
+Name='input3'
+Range=[0 100]
+NumMFs=3
+MF1='Light':'trimf',[-40 0 50]
+MF2='medium':'trimf',[0 50 100]
+MF3='heavy':'trimf',[50 100 140]
+
+[Output1]
+Name='output1'
+Range=[0 60]
+NumMFs=5
+MF1='VS':'trimf',[0 8 12]
+MF2='S':'trimf',[8 12 20]
+MF3='med':'trimf',[12 20 40]
+MF4='loNG':'trimf',[20 40 60]
+MF5='VLONG':'trimf',[40 60 75]
+
+[Rules]
+1 1 1, 1 (1) : 1
+1 1 2, 2 (1) : 1
+1 1 3, 3 (1) : 1
+1 2 1, 2 (1) : 1
+1 2 2, 2 (1) : 1
+1 2 3, 3 (1) : 1
+1 3 1, 2 (1) : 1
+1 3 2, 3 (1) : 1
+1 3 3, 4 (1) : 1
+2 1 1, 2 (1) : 1
+2 1 2, 2 (1) : 1
+2 1 3, 3 (1) : 1
+2 2 1, 2 (1) : 1
+2 2 2, 3 (1) : 1
+2 2 3, 3 (1) : 1
+2 3 1, 2 (1) : 1
+2 3 2, 3 (1) : 1
+2 3 0, 4 (1) : 1
+3 1 1, 3 (1) : 1
+3 1 2, 3 (1) : 1
+3 1 3, 4 (1) : 1
+3 2 1, 3 (1) : 1
+3 2 2, 4 (1) : 1
+3 2 3, 5 (1) : 1
+3 3 1, 3 (1) : 1
+3 3 2, 5 (1) : 1
+3 3 3, 5 (1) : 1

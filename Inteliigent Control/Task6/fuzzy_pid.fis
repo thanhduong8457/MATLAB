@@ -1,0 +1,49 @@
+[System]
+Name='fuzzy_pid'
+Type='sugeno'
+Version=2.0
+NumInputs=1
+NumOutputs=2
+NumRules=5
+AndMethod='prod'
+OrMethod='probor'
+ImpMethod='prod'
+AggMethod='sum'
+DefuzzMethod='wtaver'
+
+[Input1]
+Name='yd'
+Range=[0 100]
+NumMFs=5
+MF1='10':'trapmf',[0 0 10 30]
+MF2='30':'trimf',[10 30 50]
+MF3='50':'trimf',[30 50 70]
+MF4='70':'trimf',[50 70 90]
+MF5='90':'trapmf',[70 90 100 100]
+
+[Output1]
+Name='Kp'
+Range=[0 1]
+NumMFs=5
+MF1='10':'constant',[30]
+MF2='30':'constant',[30]
+MF3='50':'constant',[30]
+MF4='70':'constant',[30]
+MF5='90':'constant',[30]
+
+[Output2]
+Name='Ki'
+Range=[0 1]
+NumMFs=5
+MF1='10':'constant',[1]
+MF2='30':'constant',[0.5]
+MF3='50':'constant',[0.5]
+MF4='70':'constant',[0.3]
+MF5='90':'constant',[0.2]
+
+[Rules]
+1, 1 1 (1) : 1
+2, 2 2 (1) : 1
+3, 3 3 (1) : 1
+4, 4 4 (1) : 1
+5, 5 5 (1) : 1

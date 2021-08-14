@@ -1,0 +1,49 @@
+[System]
+Name='fuzzy1'
+Type='sugeno'
+Version=2.0
+NumInputs=1
+NumOutputs=3
+NumRules=3
+AndMethod='prod'
+OrMethod='probor'
+ImpMethod='prod'
+AggMethod='sum'
+DefuzzMethod='wtaver'
+
+[Input1]
+Name='yd'
+Range=[0 3.14159265358979]
+NumMFs=3
+MF1='SMALL':'trapmf',[0 0 0.785398163397448 1.5707963267949]
+MF2='MEDIUM':'trimf',[0.785398163397448 1.5707963267949 2.35619449019234]
+MF3='LARGE':'trapmf',[1.5707963267949 2.35619449019234 3.14159265358979 3.14159265358979]
+
+[Output1]
+Name='p'
+Range=[0 1]
+NumMFs=3
+MF1='p':'constant',[18]
+MF2='p':'constant',[18]
+MF3='p':'constant',[18]
+
+[Output2]
+Name='i'
+Range=[0 1]
+NumMFs=3
+MF1='i':'constant',[18]
+MF2='i':'constant',[13]
+MF3='i':'constant',[7]
+
+[Output3]
+Name='d'
+Range=[0 1]
+NumMFs=3
+MF1='d':'constant',[5]
+MF2='d':'constant',[5]
+MF3='d':'constant',[4]
+
+[Rules]
+1, 1 1 1 (1) : 1
+2, 2 2 2 (1) : 1
+3, 3 3 3 (1) : 1

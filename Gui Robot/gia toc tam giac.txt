@@ -1,0 +1,51 @@
+pmax = 200;
+vmax = 20;
+amax = 20;
+
+tc = 2*vmax/amax;          
+tm = (pmax - 2*((2*amax/tc)*tc^3/48+ vmax*tc/4 + amax*tc^2/8 - (2*amax/tc)*tc^3/48))/vmax;      
+tf = 2*tc + tm;
+q = zeros(1,100);
+v = zeros(1,100);
+a = zeros(1,100);
+time = zeros(1,100);
+
+for i = 1:1:tf*100+1
+    t = (i-1)*0.01;
+    if t <= tc/2 
+        q(i) = (amax/(3*tc))*t^3;
+        v(i) = (amax/tc)*t^2;
+        a(i) = (2*amax/tc)*t;
+    elseif (t>tc/2 && t <= tc) 
+        q(i) = (-amax/(3*tc))*t^3 + amax*t^2 - vmax*t + vmax*tc/2 - amax*tc^2/6;
+        v(i) = (-amax/tc)*t^2 + 2*amax*t - vmax;
+        a(i) = (-2*amax/tc)*(t-tc);
+    elseif (t>tc && t <= tc+tm)
+        q(i) = vmax*t + amax*tc^2/2 - 3*vmax*tc/2;
+        v(i) = vmax;
+        a(i) = 0;
+    elseif (t>tc+tm && t <= tf-tc/2)
+        q(i) = -amax/(3*tc)*t^3 + amax/tc*(tc+tm)*t^2 + (vmax-amax/tc*(tc+tm)^2)*t + amax/(3*tc)*(tc+tm)^3 + amax/2*tc^2 - 3*vmax*tc/2;
+        v(i) = (-amax*t^2)/tc +(2*amax*(tc+tm)*t)/tc + vmax -amax/tc*(tc+tm)^2;
+        a(i) = (-2*amax/tc)*(t-tc-tm);
+    elseif (t>tf-tc/2 && t <= tf)
+        k = (-amax*(tm+3*tc/2)^2)/tc +(2*amax*(tc+tm)*(tm+3*tc/2))/tc + vmax -amax/tc*(tc+tm)^2 - amax/tc*(tm+3*tc/2)^2+2*amax/tc*(tm+2*tc)*(tm+3*tc/2);
+        h = -amax/(3*tc)*(tm+3*tc/2)^3 + amax/tc*(tc+tm)*(tm+3*tc/2)^2 + (vmax-amax/tc*(tc+tm)^2)*(tm+3*tc/2) + amax/(3*tc)*(tc+tm)^3 + amax/2*tc^2 - 3*vmax*tc/2 - amax/(3*tc)*(tm+3*tc/2)^3 + amax/tc*(tm+2*tc)*(tm+3*tc/2)^2 - k*(tm+3*tc/2);
+        q(i) = amax/(3*tc)*t^3 - amax/tc*(tm+2*tc)*t^2 + k*t +h;
+        v(i) = amax/tc*t^2 -2*amax/tc*(tm+2*tc)*t+k;
+        a(i) = (2*amax/tc)*(t-tf);
+    end
+    time(i) = t;
+end
+subplot(3,1,1);
+plot(time,q,'r','LineWidth',2);
+title('position');
+grid on;
+subplot(3,1,2);
+plot(time,v,'g','LineWidth',2);
+title('velocity');
+grid on;
+subplot(3,1,3);
+plot(time,a,'b','LineWidth',2);
+title('acceleration');
+grid on;

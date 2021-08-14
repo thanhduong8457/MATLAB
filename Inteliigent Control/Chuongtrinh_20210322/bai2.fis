@@ -1,0 +1,53 @@
+[System]
+Name='bai2'
+Type='mamdani'
+Version=2.0
+NumInputs=2
+NumOutputs=1
+NumRules=12
+AndMethod='min'
+OrMethod='max'
+ImpMethod='min'
+AggMethod='max'
+DefuzzMethod='mom'
+
+[Input1]
+Name='input1'
+Range=[0 60]
+NumMFs=3
+MF1='LO':'trimf',[-24 0 15]
+MF2='MED':'trimf',[0 15 40]
+MF3='HI':'trapmf',[15 40 60 60]
+
+[Input2]
+Name='input2'
+Range=[0 30]
+NumMFs=4
+MF1='LO':'trimf',[-10 0 10]
+MF2='MED':'trimf',[0 10 15]
+MF3='HI':'trimf',[10 15 20]
+MF4='VH':'trapmf',[15 20 30 30]
+
+[Output1]
+Name='output1'
+Range=[0 30]
+NumMFs=5
+MF1='VS':'trimf',[-3 0 3]
+MF2='S':'trimf',[0 3 8]
+MF3='MED':'trimf',[3 8 16]
+MF4='L':'trimf',[8 16 30]
+MF5='VL':'trimf',[16 30 40]
+
+[Rules]
+1 1, 5 (1) : 1
+1 2, 3 (1) : 1
+1 3, 2 (1) : 1
+1 4, 1 (1) : 1
+2 1, 5 (1) : 1
+2 2, 4 (1) : 1
+2 3, 2 (1) : 1
+2 4, 1 (1) : 1
+3 1, 5 (1) : 1
+3 2, 4 (1) : 1
+3 3, 3 (1) : 1
+3 4, 1 (1) : 1

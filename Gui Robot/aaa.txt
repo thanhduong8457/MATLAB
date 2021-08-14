@@ -1,0 +1,247 @@
+% Chương trình giải bài toán ROBOT bằng MATLAB SYMBOLIC TOOLBOX
+clear all    % Xóa tất cả các biến hiện có ở Workspace
+clc          % Xóa mọi dòng trên Command Window
+startup_rvc  % Khởi động Robotics Toolbox (file strartup_rvc của ROBOTICS TOOLBOX phải đang nằm ở thư      
+             % mục hiện thời (Current Directory của MATLAB.
+
+% Khai báo các symbolic variables cùng các điều kiện của biến
+syms q1 q2 q3 a1 a2 a3 dq1 dq2 dq3 m1 m2 m3 t g
+% q1, q2, q3 là các biến khớp 
+% a1, a2, a3 là độ dài các thanh
+% dq1, dq2, dq3 là đạo hàm của q1, q2, q3
+% m1, m2, m3 là khối lượng các thanh
+% t : biến thời gian
+% g : gia tốc trọng trường
+
+assume(a1,'real');assume(a1>0); % Có nghĩa là ta cho MATLAB biết a1 là số thực dương
+assume(a2,'real');assume(a2>0); % việc này sẽ giúp cho việc rút gọn biểu thức được hiệu quả hơn
+assume(a3,'real');assume(a3>0);
+assume(q1,'real');
+assume(q2,'real');
+assume(q3,'real');
+assume(dq1,'real');
+assume(dq2,'real');
+assume(dq3,'real');
+assume(t,'real');assume(t>0);
+assume(m1,'real');assume(m1>0);
+assume(m2,'real');assume(m2>0);
+assume(m3,'real');assume(m3>0);
+assume(g,'real');assume(g>0);
+
+q = [q1;q2;q3];     % Vector các tọa độ suy rộng q
+dq = [dq1;dq2;dq3]; % Vector các vận tốc dài
+
+% Nhập các ma trận D-H
+A_01=[ cos(q1) 0 sin(q1) a1*cos(q1); sin(q1) 0 -cos(q1) a1*sin(q1); 0 1 0 0;0 0 0 1];
+A_12=[ cos(q2) -sin(q2) 0 a2*cos(q2); sin(q2) cos(q2) 0 a2*sin(q2); 0 0 1 0;0 0 0 1];
+A_23=[ cos(q3) -sin(q3) 0 a3*cos(q3); sin(q3) cos(q3) 0 a3*sin(q3); 0 0 1 0;0 0 0 1];
+
+% Tính các ma trận truyền
+R_01=A_01(1:3,1:3);
+A_03=A_01*A_12*A_23;
+A_02=simplify(A_01*A_12); % Sau khi tính toán ta thu gọn kết quả ngay bằng lệnh simplify
+R_02=A_02(1:3,1:3);
+disp('Ma tran chuyen tu khau 3 sang khau tac dong cuoi la')
+A_03 = simplify(A_03)
+R_03 = A_03(1:3,1:3);
+disp(' ')
+
+% Tạo mô hình Robot trong Robotics toolbox
+L(1)=Link([0,0,5,pi/2,0]); % Lệnh Link tạo một khâu của Robot
+L(2)=Link([0,0,3,0,0]);
+L(3)=Link([0,0,2,0,0]);
+rob=SerialLink(L);         % Lệnh SerialLink(L) tạo một robot nối tiếp gồm các khâu của L
+
+% Giải bài toán động học thuận
+disp('Giai bai toan dong hoc thuan')
+
+% 1. Tìm vi trí và tính vận tốc dài của khâu thao tác
+rE = A_03(1:3,4)             % Vector tọa độ khâu thao tác
+v_qE = simplify(jacobian(rE,q)*dq) % Tính vector vận tốc khâu tác động cuối
+
+% 2. Tìm góc Cardan và Tính toán van toc góc cua khâu thao tác
+R_0E = A_03(1:3,1:3)
+diff_R_0E = diff(R_0E,q1)*dq1+diff(R_0E,q2)*dq2+diff(R_0E,q3)*dq3; %Tinh dao ham cua R
+omega_curve = diff_R_0E*R_0E.';
+omega_curve = simplify(omega_curve)
+disp('Van toc goc:')
+omega = [omega_curve(3,2) omega_curve(1,3) omega_curve(2,1)]
+
+% 3. Thay so bai toan dong hoc thuan
+disp(' ')
+disp('Thay so') % Khi thay số ta sử dụng lệnh subs
+disp('Vi tri diem tac dong cuoi')
+sub_rE = simplify(subs(rE,{q1 q2 q3 a1 a2 a3},{3*t 2*t t 5 3 2}))
+disp('Van toc dai:')
+sub_diff_qE = simplify(subs(v_qE,{q1 q2 q3 dq1 dq2 dq3 a1 a2 a3},{t 2*t 3*t 3 2 1 5 3 2}))
+disp('Van toc goc:')
+sub_R_0E = simplify(subs(R_0E,{a1 a2 a3},{5 3 2}));
+sub_omega = simplify(subs(omega,{q1 q2 q3 dq1 dq2 dq3 a1 a2 a3},{t 2*t 3*t 3 2 1 5 3 2}))
+
+% 4. Tính toán và vẽ đồ thị
+time=0:0.02:2*pi/6;
+num_rE=zeros(3,length(time));
+for j=1:length(time)
+num_rE(:,j) = subs(sub_rE,t,time(j));
+end
+figure(1)
+clf
+title('Quy dao cua khau tac dong cuoi trong bai toan thuan')
+hold on
+grid on
+axis([-10, 10, -10, 10 ,-5, 5])
+pause
+for j=1:length(time)
+    plot3(num_rE(1,j),num_rE(2,j),num_rE(3,j),'b+'); % Vẽ quĩ đạo chuyển động bằng MATLAB
+    plot(rob,[3*time(j),2*time(j),time(j)]); % Vẽ hình ảnh chuyển động 3D của Robot theo quĩ đạo
+    pause(1/30) % Dùng lệnh pause để tạo cảm giác giống như một đoạn phim
+end
+
+
+% Giải bài toán động học ngược
+figure(2)
+clf
+hold on
+grid on
+rE_solve = subs(rE,{a1 a2 a3},{5 3 2});
+time=0:0.1:3;
+j=length(time);
+q1_num=zeros(2,j);
+q2_num=zeros(2,j);
+q3_num=zeros(2,j);
+xE = zeros(1,j);yE = zeros(1,j);zE = zeros(1,j);
+for i=1:j
+    xE(i) = 6*sin(time(i));
+    yE(i) = 6*cos(time(i));
+    zE(i) = 3;
+    
+    f1 = rE_solve(1,1)-xE(i); % các phương trình động học Robot
+    f2 = rE_solve(2,1)-yE(i);
+    f3 = rE_solve(3,1)-zE(i);
+    f = [f1 f2 f3];
+    
+    [q1_num(:,i) q2_num(:,i) q3_num(:,i)] = solve(f1,f2,f3); 
+    % Dùng lệnh solve() để tìm nghiệm của hệ phương trình động học
+end
+subplot(311)
+plot(time,q1_num(1,:))
+grid
+subplot(312)
+plot(time,q2_num(1,:))
+grid
+subplot(313)
+grid
+plot(time,q3_num(1,:))
+grid
+
+figure(3)
+clf
+title('Quy dao cua khau tac dong cuoi trong bai toan nguoc')
+hold on
+grid on
+axis([-10, 10, -10, 10 ,-5, 5])
+pause
+close(2)
+for i=1:length(time)
+    plot(rob,[q1_num(1,i),q2_num(1,i),q3_num(1,i)])
+    plot3(xE(i),yE(i),zE(i),'b+')
+pause(1/5)
+end
+
+
+% Giải bài toán động lực học(Solve the dynamics problem)
+
+% Cac tensor quan tinh (inertial moment)
+I_c1 = [0 0 0;0 m1*a1^2/12 0;0 0 m1*a1^2/12];
+I_c2 = [0 0 0;0 m1*a2^2/12 0;0 0 m1*a2^2/12];
+I_c3 = [0 0 0;0 m1*a3^2/12 0;0 0 m1*a3^2/12];
+
+% Toa do cac trong tam (center of mass in moving coordinate)
+A_c1 = [1 0 0 -a1/2;0 1 0 0;0 0 1 0;0 0 0 1];
+A_c2 = [1 0 0 -a2/2;0 1 0 0;0 0 1 0;0 0 0 1];
+A_c3 = [1 0 0 -a3/2;0 1 0 0;0 0 1 0;0 0 0 1];
+
+% Chuyen sang toa do co dinh (transforming into fixed coordinate)
+A_0_c1 = A_01*A_c1
+A_0_c2 = simplify(A_02*A_c2)
+A_0_c3 = simplify(A_03*A_c3)
+
+% Cac ma tran vi tri
+disp(' ')
+disp('Toa do cac trong tam trong he toa do co dinh')
+r_0_c1 = A_0_c1(1:3,4)
+r_0_c2 = A_0_c2(1:3,4)
+r_0_c3 = A_0_c3(1:3,4)
+
+disp('Van toc cac khoi tam')
+v_0_c1 = simplify(jacobian(r_0_c1,q)*dq)
+v_0_c2 = simplify(jacobian(r_0_c2,q)*dq)
+v_0_c3 = simplify(jacobian(r_0_c3,q)*dq)
+v_c1 = simplify(v_0_c1.'*v_0_c1);
+v_c2 = simplify(v_0_c2.'*v_0_c2);
+v_c3 = simplify(v_0_c1.'*v_0_c3);
+JT1=simplify(jacobian(r_0_c1,q)); % Các Jacobian vận tốc dài
+JT2=simplify(jacobian(r_0_c2,q));
+JT3=simplify([diff(r_0_c3,q1),diff(r_0_c2,q2),diff(r_0_c3,q3)]);
+
+disp('Van toc goc cac khau')
+tmp = A_0_c1(1:3,1:3); C2 = A_0_c2(1:3,1:3); C3 = A_0_c3(1:3,1:3);
+W_c1=tmp.'*(diff(tmp,q1)*dq1+diff(tmp,q2)*dq2+diff(tmp,q3)*dq3);
+w_c1=simplify([W_c1(3,2);W_c1(1,3);W_c1(2,1)])
+W_c2=C2.'*(diff(C2,q1)*dq1+diff(C2,q2)*dq2+diff(C2,q3)*dq3);
+w_c2=simplify([W_c2(3,2);W_c2(1,3);W_c2(2,1)])
+W_c3=C3.'*(diff(C3,q1)*dq1+diff(C3,q2)*dq2+diff(C3,q3)*dq3);
+w_c3=simplify([W_c3(3,2);W_c3(1,3);W_c3(2,1)])
+
+JR1 = [0 0 0;1 0 0;0 0 0]; 
+JR2 = [sin(q2) 0 0;0 cos(q2) 0;0 0 0]; 
+JR3 =[sin(q2+q3) 0 0;0 cos(q2+q3) 0;0 1 1]; % Các Jacobian vận tốc góc
+
+disp('Dong nang cua cac khau') % Tính toán động năng từng khâu
+T1 = simplify(1/2*m1*v_c1.'*v_c1+1/2*w_c1.'*I_c1*w_c1)
+T2 = simplify(1/2*m1*v_c2.'*v_c2+1/2*w_c2.'*I_c2*w_c2)
+T3 = simplify(1/2*m1*v_c3.'*v_c3+1/2*w_c3.'*I_c3*w_c3)
+
+% Manipulator Inertia Matrix (Tính ma trận khối lượng của Robot)
+disp('Phuong trinh dong luc hoc tong quat co dang:')
+disp('         M.ddq - Psi - Q = U')
+disp(' Trong do:')
+M = JT1.'*m1*JT1+JT2.'*m2*JT2+JT3.'*m3*JT3+JR1.'*I_c1*JR1+JR2.'*I_c2*JR2+JR3.'*I_c3*JR3;
+M = simplify(M)
+
+% Biểu thức thế năng - Potential Energy (PE)
+PE = (1/2*m2+m3)*a2*cos(q2)*g+1/2*m3*a3*cos(q3)*g;
+
+% Centrifugal/Coriolis matrix and Psi (các ma trận lực hướng tâm/ Coriolis)
+tmp = sym(zeros(3));
+Psi = sym(zeros(3,1));
+
+for j=1:3
+    h = sym(0);
+    for k=1:3
+        for l=1:3
+            tmp(k,l) = 1/2*(diff(M(k,l),q(l))+diff(M(l,j),q(k))-diff(M(k,l),q(j)))*dq(k)*dq(l);
+            h = h+tmp(k,l);
+        end
+    end
+    Psi(j) = -h-diff(PE,q(j));
+end
+Psi=simplify(Psi)
+
+% Statics of Robot
+syms Fx Fy Fz Mx My Mz            % Các lực và momen tác dụng vào khâu cuối
+assume(Fx,'real');assume(Fy,'real');assume(Fz,'real');
+assume(Mx,'real');assume(My,'real');assume(Mz,'real');
+F_E3 = [Fx, Fy, Fz].'; M_E3 = [Mx, My, Mz].';
+P_3 = [0,0,-m3*g].';P_2 = [0,0,-m2*g].';P_1 = [0,0,-m1*g].';
+r_1 = [a1,0,0].'; r_2 = [a2,0,0].'; r_3 = [a3,0,0].';
+r_c1 = [a1,0,0].'; r_c2 = [a2,0,0].'; r_c3 = [a3,0,0].';
+
+F_32 = simplify(F_E3-P_3)
+M_32 = simplify(M_E3+R_03*MatrixCurve(r_3)*F_32-R_03*MatrixCurve(r_c3)*P_3)
+
+F_21 = simplify(F_32-P_2)
+M_21 = simplify(M_32+R_02*MatrixCurve(r_2)*F_21-R_02*MatrixCurve(r_c2)*P_2)
+
+F_10 = simplify(F_21-P_1)
+M_10 = simplify(M_21+R_01*MatrixCurve(r_1)*F_10-R_01*MatrixCurve(r_c1)*P_1)

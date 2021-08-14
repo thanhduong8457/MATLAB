@@ -1,0 +1,36 @@
+CC     = "c:\matlabr2009b\sys\lcc\bin\lcc.exe"
+LD     = "c:\matlabr2009b\sys\lcc\bin\lcclnk.exe"
+LIBCMD = "c:\matlabr2009b\sys\lcc\bin\lcclib.exe"
+CFLAGS = -c -Zp8 -DMATLAB_MEX_FILE -noregistrylookup
+LDFLAGS = -s -dll -L"c:\matlabr2009b\sys\lcc\lib"
+LIBFLAGS = 
+
+OBJECTS = \
+	"pend_swingup_sfun.obj"\
+	"pend_swingup_sfun_registry.obj"\
+	"c2_pend_swingup.obj"\
+	"lccstub.obj"\
+	"c:\matlabr2009b\sys\lcc\mex\lccdef.def"\
+	"c:\matlabr2009b\stateflow\c\debugger\lib\win32\sfc_debuglcc.lib"\
+	"c:\matlabr2009b\stateflow\c\mex\lib\win32\sfc_mexlcc.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libmex.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libmx.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libfixedpoint.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libut.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libmwmathutil.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libemlrt.lib"\
+	"c:\matlabr2009b\extern\lib\win32\lcc\libmwblascompat32.lib"\
+
+INCLUDE_PATH= -I"c:\matlabr2009b\sys\lcc\include"  -I"c:\matlabr2009b\extern\include"  -I"c:\matlabr2009b\simulink\include"  -I"c:\matlabr2009b\stateflow\c\mex\include"  -I"c:\matlabr2009b\stateflow\c\debugger\include" 
+ 
+
+pend_swingup_sfun.mexw32 : $(MAKEFILE) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o pend_swingup_sfun.mexw32 @pend_swingup_sfun.lmko
+pend_swingup_sfun.obj :	"pend_swingup_sfun.c"
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) "pend_swingup_sfun.c"
+pend_swingup_sfun_registry.obj :	"pend_swingup_sfun_registry.c"
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) "pend_swingup_sfun_registry.c"
+c2_pend_swingup.obj :	"c2_pend_swingup.c"
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) "c2_pend_swingup.c"
+lccstub.obj :	"c:\matlabr2009b\sys\lcc\mex\lccstub.c"
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) "c:\matlabr2009b\sys\lcc\mex\lccstub.c"
