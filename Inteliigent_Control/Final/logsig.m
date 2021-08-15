@@ -1,3 +1,3 @@
-function y=log_sig(value)
+function y=logsig(value)
     y=1/(1+exp(-value));
 end
