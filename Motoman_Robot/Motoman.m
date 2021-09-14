@@ -1,12 +1,12 @@
-function varargout = Scara(varargin)
-% SCARA MATLAB code for Scara.fig
-%      SCARA, by itself, creates a new SCARA or raises the existing
+function varargout = Motoman(varargin)
+% MOTOMAN MATLAB code for Motoman.fig
+%      MOTOMAN, by itself, creates a new MOTOMAN or raises the existing
 %      singleton*.
-%      H = SCARA returns the handle to a new SCARA or the handle to
+%      H = MOTOMAN returns the handle to a new MOTOMAN or the handle to
 %      the existing singleton*.
-%      SCARA('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SCARA.M with the given input arguments.
-%      SCARA('Property','Value',...) creates a new SCARA or raises the
+%      MOTOMAN('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in MOTOMAN.M with the given input arguments.
+%      MOTOMAN('Property','Value',...) creates a new MOTOMAN or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before Scara_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -15,15 +15,15 @@ function varargout = Scara(varargin)
 %      instance to run (singleton)".
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help Scara
-% Last Modified by GUIDE v2.5 30-Dec-2020 21:58:08
+% Edit the above text to modify the response to help Motoman
+% Last Modified by GUIDE v2.5 14-Sep-2021 00:24:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Scara_OpeningFcn, ...
-                   'gui_OutputFcn',  @Scara_OutputFcn, ...
+                   'gui_OpeningFcn', @Motoman_OpeningFcn, ...
+                   'gui_OutputFcn',  @Motoman_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -37,38 +37,37 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before Scara is made visible.
-function Scara_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before Motoman is made visible.
+function Motoman_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to Scara (see VARARGIN)
+% varargin   command line arguments to Motoman (see VARARGIN)
 
 %set the initial position of robot
 rad = pi/180;
 
 theta1 = str2double(get(handles.theta1,'string'))*rad;
 theta2 = str2double(get(handles.theta2,'string'))*rad;
-d3 = str2double(get(handles.d3,'string'));
-theta4 = str2double(get(handles.theta4,'string'))*rad;
+theta3 = str2double(get(handles.theta3,'string'))*rad;
 
-handles.a = [400 250 0 0]';
-handles.alpha = [0 0 0 pi]';
-handles.d = [330 0 d3 0]';
-handles.theta = [theta1 theta2 0 theta4]';
+handles.a       = [0        400     130]';
+handles.alpha   = [pi/2     0       0  ]';
+handles.d       = [200      0       0  ]';
+%handles.theta   = [theta1   theta2  theta3]';
+handles.theta   = [0  0  90]';
 
 x0 = 0; y0 = 0; z0 = 0;
-x1 = 0; y1 = 0; z1 = 330;
-x2 = 400; y2 = 0; z2 = 330;
-x3 = 650; y3 = 0; z3 = 330;
-x4 = 650; y4 = 0; z4 = 330;
+x1 = 0; y1 = 0; z1 = 0;
+x2 = 0; y2 = 150; z2 = 1020;
+x3 = 0; y3 = 150; z3 = 1150;
 
 %joint position
 handles.J1 = [x1 y1 z1 1]';
 handles.J2 = [x2 y2 z2 1]';
 handles.J3 = [x3 y3 z3 1]';
-handles.J4 = [x4 y4 z4 1]';
+
 
 %position of end effector
 handles.grip1 = [650 50 280 1]';
@@ -77,12 +76,12 @@ handles.grip3 = [650 -50 280 1]';
 handles.grip4 = [650 -50 330 1]';
 
 %DH matrix frame
-DH=zeros(4,4,4);
-for i=1:4
-        DH(:,:,i)=[cos(handles.theta(i)) -cos(handles.alpha(i))*sin(handles.theta(i)) sin(handles.alpha(i))*sin(handles.theta(i)) handles.a(i)*cos(handles.theta(i));
-               sin(handles.theta(i)) cos(handles.alpha(i))*cos(handles.theta(i)) -sin(handles.alpha(i))*cos(handles.theta(i)) handles.a(i)*sin(handles.theta(i));
-               0 sin(handles.alpha(i)) cos(handles.alpha(i)) handles.d(i);
-               0 0 0 1];
+DH = zeros(4,4,4);
+for i = 1:3
+        DH(:,:,i)=[cos(handles.theta(i))   -cos(handles.alpha(i))*sin(handles.theta(i))    sin(handles.alpha(i))*sin(handles.theta(i))     handles.a(i)*cos(handles.theta(i));
+                   sin(handles.theta(i))   cos(handles.alpha(i))*cos(handles.theta(i))     -sin(handles.alpha(i))*cos(handles.theta(i))    handles.a(i)*sin(handles.theta(i));
+                   0                       sin(handles.alpha(i))                           cos(handles.alpha(i))                           handles.d(i);
+                   0                       0                                               0                                               1];
 end
 
 %new joint position
@@ -92,63 +91,55 @@ handles.J3_new = DH(:,:,1)*DH(:,:,2)*[0 0 0 1]';
 handles.J4_new = DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*[0 0 0 1]';
 
 %new grip position
-T_matrix =(DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*DH(:,:,4));
-handles.grip1_new = T_matrix*[0 -50 50 1]';
-handles.grip2_new = T_matrix*[0 -50 0 1]';
-handles.grip4_new = T_matrix*[0 50 0 1]';
-handles.grip3_new = T_matrix*[0 50 50 1]';
+T_matrix = DH(:,:,1)*DH(:,:,2)*DH(:,:,3);
+handles.grip1_new = T_matrix*[0 -50 50  1]';
+handles.grip2_new = T_matrix*[0 -50 0   1]';
+handles.grip4_new = T_matrix*[0 +50 0   1]';
+handles.grip3_new = T_matrix*[0 +50 50  1]';
 
 %plot robot
 axes(handles.axes1);
-draw3d(handles.J1_new,handles.J2_new,handles.J3_new,handles.J4_new,handles.grip1_new,handles.grip2_new,handles.grip3_new,handles.grip4_new);
+
+draw3d(handles.J1_new, handles.J2_new, handles.J3_new, handles.J4_new);
 
 plot_axis_each_joint(DH);
 
 %with T matrix above, we have
-rotation_matrix=T_matrix(1:3,1:3);
-handles.p1 = atan2(-rotation_matrix(3,1),sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
-handles.p2 = atan2(-rotation_matrix(3,1),-sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
-handles.r1 = atan2(rotation_matrix(3,2)/cos(handles.p1),rotation_matrix(3,3)/cos(handles.p1));
-handles.r2 = atan2(rotation_matrix(3,2)/cos(handles.p2),rotation_matrix(3,3)/cos(handles.p2));
-handles.y1 = atan2(rotation_matrix(2,1)/cos(handles.p1),rotation_matrix(1,1)/cos(handles.p1));
-handles.y2 = atan2(rotation_matrix(2,1)/cos(handles.p2),rotation_matrix(1,1)/cos(handles.p2));
+%rotation_matrix = T_matrix(1:3,1:3);
+%handles.p1 = atan2(-rotation_matrix(3,1),sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
+%handles.p2 = atan2(-rotation_matrix(3,1),-sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
+%handles.r1 = atan2(rotation_matrix(3,2)/cos(handles.p1),rotation_matrix(3,3)/cos(handles.p1));
+%handles.r2 = atan2(rotation_matrix(3,2)/cos(handles.p2),rotation_matrix(3,3)/cos(handles.p2));
+%handles.y1 = atan2(rotation_matrix(2,1)/cos(handles.p1),rotation_matrix(1,1)/cos(handles.p1));
+%handles.y2 = atan2(rotation_matrix(2,1)/cos(handles.p2),rotation_matrix(1,1)/cos(handles.p2));
 
 %set x y z values to guide
-set(handles.x,'String',sprintf('%.2f',handles.J4_new(1)));
-set(handles.y,'String',sprintf('%.2f',handles.J4_new(2)));
-set(handles.z,'String',sprintf('%.2f',handles.J4_new(3)));
-
-%with T matrix above, we have
-rotation_matrix = T_matrix(1:3,1:3);
-handles.p1 = atan2(-rotation_matrix(3,1),sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
-handles.p2 = atan2(-rotation_matrix(3,1),-sqrt(rotation_matrix(3,2)^2+rotation_matrix(3,3)^2));
-handles.r1 = atan2(rotation_matrix(3,2)/cos(handles.p1),rotation_matrix(3,3)/cos(handles.p1));
-handles.r2 = atan2(rotation_matrix(3,2)/cos(handles.p2),rotation_matrix(3,3)/cos(handles.p2));
-handles.y1 = atan2(rotation_matrix(2,1)/cos(handles.p1),rotation_matrix(1,1)/cos(handles.p1));
-handles.y2 = atan2(rotation_matrix(2,1)/cos(handles.p2),rotation_matrix(1,1)/cos(handles.p2));
+%set(handles.x,'String',sprintf('%.2f',handles.J6_new(1)));
+%set(handles.y,'String',sprintf('%.2f',handles.J6_new(2)));
+%set(handles.z,'String',sprintf('%.2f',handles.J6_new(3)));
 
 %set roll pitch yaw values to guide
-set(handles.roll,'String',sprintf('%.2f',(handles.r1)/rad));
-set(handles.pitch,'String',sprintf('%.2f',(handles.p1)/rad));
-set(handles.yaw,'String',sprintf('%.2f',(handles.y1)/rad));
+%set(handles.roll,'String',sprintf('%.2f',(handles.r1)/rad));
+%set(handles.pitch,'String',sprintf('%.2f',(handles.p1)/rad));
+%set(handles.yaw,'String',sprintf('%.2f',(handles.y1)/rad));
 
-% Choose default command line output for Scara
+% Choose default command line output for Motoman
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-function varargout = Scara_OutputFcn(hObject, eventdata, handles) 
+function varargout = Motoman_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
 
 function forward_Callback(hObject, eventdata, handles)
 hold off;
 rad = pi/180;
 
-%get theta 124 and d3 from guide and update DH table
+%get theta 124 and theta3 from guide and update DH table
 theta1 = str2double(get(handles.theta1,'String'))*rad;
 theta2 = str2double(get(handles.theta2,'String'))*rad;
-d3 = str2double(get(handles.d3,'String'));
+d3 = str2double(get(handles.theta3,'String'));
 theta4 = str2double(get(handles.theta4,'String'))*rad;
 
 handles.theta = [theta1 theta2 0 theta4]';
@@ -219,7 +210,7 @@ set(handles.yaw,'String',sprintf('%.2f',(handles.y1)/rad));
     
 handles.theta1_2 = str2double(get(handles.theta1_22,'string'))*rad;
 handles.theta2_2 = str2double(get(handles.theta2_22,'string'))*rad;
-handles.d3_2 = str2double(get(handles.d3_22,'string'));
+handles.d3_2 = str2double(get(handles.theta3_22,'string'));
 handles.theta4_2 = str2double(get(handles.theta4_22,'string'))*rad;
 
 if (handles.d3_2 > 0)||(handles.d3_2 < -330)||(handles.theta1_2/rad < -155)||(handles.theta1_2/rad > 155)||(handles.theta2_2/rad < -145)||(handles.theta2_2/rad > 145)||(handles.theta4_2/rad > 180)||(handles.theta4_2/rad < -180)
@@ -352,7 +343,7 @@ if sqrt(handles.px^2+handles.py^2) <= 195 || sqrt(handles.px^2+handles.py^2) > 6
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1,'String',0);
     set(handles.theta2,'String',0);
-    set(handles.d3,'String',0);
+    set(handles.theta3,'String',0);
     set(handles.theta4,'String',0);
 else  
 handles.r1 = pi;
@@ -387,7 +378,7 @@ set(handles.warning,'String',sprintf('                    ...Approved...        
     %set values
     set(handles.theta1,'String',sprintf('%.2f',handles.theta(1)/rad));
     set(handles.theta2,'String',sprintf('%.2f',handles.theta(2)/rad));
-    set(handles.d3,'String',sprintf('%.2f',handles.d(3)));
+    set(handles.theta3,'String',sprintf('%.2f',handles.d(3)));
     set(handles.theta4,'String',sprintf('%.2f',handles.theta(4)/rad));
 
 
@@ -405,7 +396,7 @@ if sqrt(handles.px_2^2+handles.py_2^2) <= 195 || sqrt(handles.px_2^2+handles.py_
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1_22,'String',0);
     set(handles.theta2_22,'String',0);
-    set(handles.d3_22,'String',0);
+    set(handles.theta3_22,'String',0);
     set(handles.theta4_22,'String',0);
 else  
 handles.r1_2 = pi;
@@ -542,7 +533,7 @@ for m=1:100
     
     set(handles.theta1_22,'String',sprintf('%.2f',handles.theta(1)/rad));
     set(handles.theta2_22,'String',sprintf('%.2f',handles.theta(2)/rad));
-    set(handles.d3_22,'String',sprintf('%.2f',handles.d(3)));
+    set(handles.theta3_22,'String',sprintf('%.2f',handles.d(3)));
     set(handles.theta4_22,'String',sprintf('%.2f',handles.theta(4)/rad));
     
     %DH matrix frame
@@ -607,7 +598,7 @@ if sqrt(handles.px^2+handles.py^2) <= 195 || sqrt(handles.px^2+handles.py^2) > 6
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1,'String',0);
     set(handles.theta2,'String',0);
-    set(handles.d3,'String',0);
+    set(handles.theta3,'String',0);
     set(handles.theta4,'String',0);
 else  
 handles.r1 = pi;
@@ -641,7 +632,7 @@ set(handles.warning,'String',sprintf('                    ...Approved...        
     %set values
     set(handles.theta1,'String',sprintf('%.2f',handles.theta(1)/rad));
     set(handles.theta2,'String',sprintf('%.2f',handles.theta(2)/rad));
-    set(handles.d3,'String',sprintf('%.2f',handles.d(3)));
+    set(handles.theta3,'String',sprintf('%.2f',handles.d(3)));
     set(handles.theta4,'String',sprintf('%.2f',handles.theta(4)/rad));
 
 
@@ -659,7 +650,7 @@ if sqrt(handles.px_2^2+handles.py_2^2) <= 195 || sqrt(handles.px_2^2+handles.py_
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1_22,'String',0);
     set(handles.theta2_22,'String',0);
-    set(handles.d3_22,'String',0);
+    set(handles.theta3_22,'String',0);
     set(handles.theta4_22,'String',0);
 else  
 handles.r1_2 = pi;
@@ -719,7 +710,7 @@ for m=1:100
     
     set(handles.theta1_22,'String',sprintf('%.2f',handles.theta(1)/rad));
     set(handles.theta2_22,'String',sprintf('%.2f',handles.theta(2)/rad));
-    set(handles.d3_22,'String',sprintf('%.2f',handles.d(3)));
+    set(handles.theta3_22,'String',sprintf('%.2f',handles.d(3)));
     set(handles.theta4_22,'String',sprintf('%.2f',handles.theta(4)/rad));
     
     %DH matrix frame
@@ -783,7 +774,7 @@ if sqrt(handles.px^2+handles.py^2) <= 195 || sqrt(handles.px^2+handles.py^2) > 6
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1,'String',0);
     set(handles.theta2,'String',0);
-    set(handles.d3,'String',0);
+    set(handles.theta3,'String',0);
     set(handles.theta4,'String',0);
 else  
 handles.r1 = pi;
@@ -807,7 +798,7 @@ if sqrt(handles.px_2^2+handles.py_2^2) <= 195 || sqrt(handles.px_2^2+handles.py_
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1_22,'String',0);
     set(handles.theta2_22,'String',0);
-    set(handles.d3_22,'String',0);
+    set(handles.theta3_22,'String',0);
     set(handles.theta4_22,'String',0);
 else  
 handles.r1_2 = pi;
@@ -926,7 +917,7 @@ if sqrt(handles.px^2+handles.py^2) <= 195 || sqrt(handles.px^2+handles.py^2) > 6
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1,'String',0);
     set(handles.theta2,'String',0);
-    set(handles.d3,'String',0);
+    set(handles.theta3,'String',0);
     set(handles.theta4,'String',0);
 else  
 handles.r1 = pi;
@@ -949,7 +940,7 @@ if sqrt(handles.px_2^2+handles.py_2^2) <= 195 || sqrt(handles.px_2^2+handles.py_
     set(handles.warning,'String',sprintf('OUT OF RANGE..!!!... The condition should be like this: -612<=X<=650; -650<=Y<=650; 0<=Z<=330; -180<=YAW<=180; 150^2<=X^2+Y^2<=650^2'));
     set(handles.theta1_22,'String',0);
     set(handles.theta2_22,'String',0);
-    set(handles.d3_22,'String',0);
+    set(handles.theta3_22,'String',0);
     set(handles.theta4_22,'String',0);
 else  
 handles.r1_2 = pi;
@@ -1117,26 +1108,16 @@ h=surf(X1,Y1,Z1,'facecolor',colr,'edgecolor','none');
 
 function plot_axis_each_joint(DH)
 
-x1=0; y1=0; z1=330;
+x1 = 0; y1 = 150; z1 = 450;
 
 %joint position
-handles.J1=[x1 y1 z1 1]';
+handles.J1 = [x1 y1 z1 1]';
 
 %plot mini axis of each joint
 
-handles.J1_new= handles.J1;
-handles.J2_new= DH(:,:,1)*[0 0 0 1]';
-handles.J3_new= DH(:,:,1)*DH(:,:,2)*[0 0 0 1]';
-handles.J4_new= DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*[0 0 0 1]';
-
-% calculate J4 axis
-J4_xaxis = DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*DH(:,:,4)*[300 0 0 1]';
-J4_yaxis = DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*DH(:,:,4)*[0 300 0 1]';
-J4_zaxis = DH(:,:,1)*DH(:,:,2)*DH(:,:,3)*DH(:,:,4)*[0 0 100 1]';
-
-arrow3d([handles.J4_new(1) J4_xaxis(1)],[handles.J4_new(2) J4_xaxis(2)],[handles.J4_new(3) J4_xaxis(3)],0.5,3,5,'r');
-arrow3d([handles.J4_new(1) J4_yaxis(1)],[handles.J4_new(2) J4_yaxis(2)],[handles.J4_new(3) J4_yaxis(3)],0.5,3,5,'b');
-arrow3d([handles.J4_new(1) J4_zaxis(1)],[handles.J4_new(2) J4_zaxis(2)],[handles.J4_new(3) J4_zaxis(3)],0.5,9,15,'y');
+handles.J1_new = handles.J1;
+handles.J2_new = DH(:,:,1)*[0 0 0 1]';
+handles.J3_new = DH(:,:,1)*DH(:,:,2)*[0 0 0 1]';
 
 %calculate J3 axis
 J3_xaxis = DH(:,:,1)*DH(:,:,2)*[300 0 0 1]';
@@ -1165,14 +1146,14 @@ arrow3d([0 frame0_xaxis(1)],[0 frame0_xaxis(2)],[0 frame0_xaxis(3)],0.5,3,5,'r')
 arrow3d([0 frame0_yaxis(1)],[0 frame0_yaxis(2)],[0 frame0_yaxis(3)],0.5,3,5,'b');
 arrow3d([0 frame0_zaxis(1)],[0 frame0_zaxis(2)],[0 frame0_zaxis(3)],0.5,9,15,'y');
 
-function draw3d(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+function draw3d(arg1, arg2, arg3, arg4)
 rotate3d on
 %plot robot arms
-plot3([0 arg1(1)],[0 arg1(2)],[0 arg1(3)],'c','LineWidth',5);
 hold on;
 plot3([arg1(1) arg2(1)],[arg1(2) arg2(2)],[arg1(3) arg2(3)],'c','LineWidth',5);
 plot3([arg2(1) arg3(1)],[arg2(2) arg3(2)],[arg2(3) arg3(3)],'c','LineWidth',5);
 plot3([arg3(1) arg4(1)],[arg3(2) arg4(2)],[arg3(3) arg4(3)],'c','LineWidth',5);
+
 
 %plot joint
 plot3(0,0,0,'o','MarkerSize',15,'MarkerEdgeColor','c','MarkerFaceColor','c');
@@ -1182,12 +1163,12 @@ plot3(arg3(1),arg3(2),arg3(3),'o','MarkerSize',15,'MarkerEdgeColor','c','MarkerF
 plot3(arg4(1),arg4(2),arg4(3),'o','MarkerSize',15,'MarkerEdgeColor','c','MarkerFaceColor','c');
 
 %plot end effector
-plot3([arg5(1) arg6(1)],[arg5(2) arg6(2)],[arg5(3) arg6(3)],'c','LineWidth',3);
-plot3([arg6(1) arg8(1)],[arg6(2) arg8(2)],[arg6(3) arg8(3)],'c','LineWidth',3);
-plot3([arg8(1) arg7(1)],[arg8(2) arg7(2)],[arg8(3) arg7(3)],'c','LineWidth',3);
+%plot3([arg7(1) arg8(1)],[arg7(2) arg8(2)],[arg7(3) arg8(3)],'c','LineWidth',3);
+%plot3([arg8(1) arg10(1)],[arg8(2) arg10(2)],[arg8(3) arg10(3)],'c','LineWidth',3);
+%plot3([arg10(1) arg9(1)],[arg10(2) arg9(2)],[arg10(3) arg9(3)],'c','LineWidth',3);
 grid on;
 
-axis([-1000 1000 -1000 1000 -10 500]);
+axis([-1500 1500 -1500 1500 -10 1200]);
 xlabel('X');
 ylabel('Y');
 zlabel('Z');
@@ -1275,18 +1256,18 @@ end
 
 
 
-function d3_22_Callback(hObject, eventdata, handles)
-% hObject    handle to d3_22 (see GCBO)
+function theta3_22_Callback(hObject, eventdata, handles)
+% hObject    handle to theta3_22 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of d3_22 as text
-%        str2double(get(hObject,'String')) returns contents of d3_22 as a double
+% Hints: get(hObject,'String') returns contents of theta3_22 as text
+%        str2double(get(hObject,'String')) returns contents of theta3_22 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function d3_22_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to d3_22 (see GCBO)
+function theta3_22_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to theta3_22 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1510,3 +1491,95 @@ function counter_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.clockwises.Value = 0;
 % Hint: get(hObject,'Value') returns toggle state of counter
+
+
+
+function theta5_Callback(hObject, eventdata, handles)
+% hObject    handle to theta5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of theta5 as text
+%        str2double(get(hObject,'String')) returns contents of theta5 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function theta5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to theta5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function theta5_22_Callback(hObject, eventdata, handles)
+% hObject    handle to theta5_22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of theta5_22 as text
+%        str2double(get(hObject,'String')) returns contents of theta5_22 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function theta5_22_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to theta5_22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function theta6_Callback(hObject, eventdata, handles)
+% hObject    handle to theta6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of theta6 as text
+%        str2double(get(hObject,'String')) returns contents of theta6 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function theta6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to theta6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function theta6_22_Callback(hObject, eventdata, handles)
+% hObject    handle to theta6_22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of theta6_22 as text
+%        str2double(get(hObject,'String')) returns contents of theta6_22 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function theta6_22_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to theta6_22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
